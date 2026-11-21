@@ -38,6 +38,9 @@ yarn-error.log*
 # uploaded photos and generated models
 /storage/
 
+# large 3D model binaries — distribute separately
+catalog/models/
+
 # local accounts and the session signing secret
 /data/
 
