@@ -355,9 +355,11 @@ function CameraRig({ mode, width, length, height }: { mode: CameraMode; width: n
   const recall = useDink((state) => state.recall);
   const seen = useRef("");
   useLayoutEffect(() => {
-    const key = `${mode}:${width}:${length}`;
+    if ((mode === "orbit" || mode === "cutaway") && !controls) return;
+    const key = `${mode}:${width}:${length}:${height}`;
     if (seen.current === key) return;
     seen.current = key;
+    useDink.getState().setFocus(null);
     if (mode === "plan") {
       camera.up.set(0, 0, -1);
       camera.position.set(width / 2, 80, length / 2);
@@ -376,8 +378,17 @@ function CameraRig({ mode, width, length, height }: { mode: CameraMode; width: n
     camera.up.set(0, 1, 0);
     if (mode === "walk") {
       camera.position.set(clamp(1.4, 0.4, width - 0.4), 1.7, clamp(1.4, 0.4, length - 0.4));
+      camera.lookAt(width / 2, 1.4, length / 2);
+      return;
     }
-  }, [camera, mode, width, length, height]);
+    const target = new THREE.Vector3(width / 2, height * 0.3, length / 2);
+    camera.position.set(width * -0.2, Math.max(height * 1.8, 4), length * 1.2);
+    camera.lookAt(target);
+    if (controls) {
+      controls.target.copy(target);
+      controls.update();
+    }
+  }, [camera, controls, mode, width, length, height]);
   useFrame(() => {
     if (recall && mode !== "walk") {
       camera.position.lerp(new THREE.Vector3(...recall.position), 0.12);

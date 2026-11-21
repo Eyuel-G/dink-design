@@ -24,8 +24,7 @@ async function openStore(): Promise<Store> {
   const store = mysqlConfigured() ? await openMysql() : createMemoryStore();
   for (const example of EXAMPLES) {
     const hash = createHash("sha256").update(`${CATALOG_REV}|${example.prompt.toLowerCase().replace(/\s+/g, " ").trim()}`).digest("hex");
-    const existing = await store.cacheGet(`spec:${hash}`);
-    if (!existing) await store.cacheSet(`spec:${hash}`, fallbackSpec(example.prompt).spec, 24 * 30);
+    await store.cacheSet(`spec:${hash}`, fallbackSpec(example.prompt).spec, 24 * 30);
   }
   return store;
 }

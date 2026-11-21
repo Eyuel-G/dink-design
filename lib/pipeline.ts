@@ -5,8 +5,9 @@ import { computeCost, type PriceQuote } from "@/lib/cost/compute";
 import { acquireModelLink } from "@/lib/assets/resolve";
 import { readyModel, toModelLink, type ModelLink } from "@/lib/assets/library";
 import type { Store } from "@/lib/db/types";
-import { bareRoomPrompt, fallbackSpec } from "@/lib/intent/fallback";
+import { bareRoomPrompt, exampleByPrompt, fallbackSpec } from "@/lib/intent/fallback";
 import { interpretEdit, suggestionChips } from "@/lib/intent/patch";
+import { PRESETS } from "@/lib/intent/presets";
 import { layoutSpec } from "@/lib/layout/place";
 import { llmConfigured, planPatch, planSpec, writeReply, type LlmUsage } from "@/lib/llm";
 import { quoteCatalogItem, type ExtractionBudget } from "@/lib/prices/engine";
@@ -160,6 +161,11 @@ async function plan(
   content: string,
   images: { mime: string; data: string }[],
 ): Promise<{ spec: BuildingSpec; note: string } | { confirm: true; reading: string; spec: BuildingSpec }> {
+  const example = images.length ? null : exampleByPrompt(content);
+  if (example) {
+    const spec = BuildingSpecSchema.parse(structuredClone(PRESETS[example.preset]));
+    return { spec, note: spec.assumptions[0] || "Loaded the example layout." };
+  }
   const hash = createHash("sha256").update(`${CATALOG_REV}|${content.toLowerCase().replace(/\s+/g, " ").trim()}`).digest("hex");
   if (!images.length) {
     const cached = await input.store.cacheGet<BuildingSpec>(`spec:${hash}`);

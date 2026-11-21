@@ -35,6 +35,14 @@ describe("layout", () => {
     expect(layoutSpec(edited!.spec).objects).toEqual([]);
   });
 
+  it("reads the living room example as the lounge, not the roastery", () => {
+    const { spec } = fallbackSpec("Living room with a sofa, coffee table, rug, curtains, and lamps");
+    expect(spec.room).toMatchObject({ width: 5.6, length: 6.8, height: 2.7 });
+    expect(spec.items.some((item) => item.catalogId === "living_sofa")).toBe(true);
+    expect(spec.items.some((item) => item.catalogId === "coffee_roaster")).toBe(false);
+    expect(spec.items.some((item) => item.catalogId === "wh_bay")).toBe(false);
+  });
+
   it("lays out a living room at real furniture sizes", () => {
     const layout = layoutSpec(PRESETS.living);
     const ids = layout.objects.map((object) => object.id);

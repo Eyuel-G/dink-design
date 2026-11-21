@@ -10,6 +10,11 @@ export interface IntentResult {
 }
 
 export function fallbackSpec(prompt: string): IntentResult {
+  const example = exampleByPrompt(prompt);
+  if (example) {
+    const spec = BuildingSpecSchema.parse(structuredClone(PRESETS[example.preset]));
+    return { spec, source: "preset", note: spec.assumptions[0] || "Loaded the example layout." };
+  }
   if (bareRoomPrompt(prompt)) {
     const spec = BuildingSpecSchema.parse(emptyRoomSpec(prompt));
     return {
@@ -104,7 +109,8 @@ export function detectPreset(prompt: string): keyof typeof PRESETS | null {
   if (/apartment|bedroom|flat/.test(text)) return "apartment";
   if (/retail|shop|store/.test(text) && !/storage/.test(text)) return "retail";
   if (/classroom|student/.test(text)) return "classroom";
-  if (/coffee|roastery|roaster/.test(text)) return "roastery";
+  if (/\broastery\b|\broaster\b|\bcoffee shop\b/.test(text)) return "roastery";
+  if (/\bliving room\b|\blounge\b/.test(text)) return "living";
   return null;
 }
 
