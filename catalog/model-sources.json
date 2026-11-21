@@ -1,0 +1,149 @@
+{
+  "light_highbay": {
+    "name": "Hanging Industrial Lamp",
+    "author": "Kuutti Siitonen",
+    "href": "https://polyhaven.com/a/hanging_industrial_lamp"
+  },
+  "fan_exhaust": {
+    "name": "Ceiling Fan",
+    "author": "Ulan Cabanilla",
+    "href": "https://polyhaven.com/a/ceiling_fan"
+  },
+  "shelf_industrial": {
+    "name": "Steel Frame Shelves 01",
+    "author": "James Ray Cock",
+    "href": "https://polyhaven.com/a/steel_frame_shelves_01"
+  },
+  "pallet_rack": {
+    "name": "Steel Frame Shelves 02",
+    "author": "James Ray Cock",
+    "href": "https://polyhaven.com/a/steel_frame_shelves_02"
+  },
+  "gondola": {
+    "name": "Steel Frame Shelves 03",
+    "author": "Ulan Cabanilla",
+    "href": "https://polyhaven.com/a/steel_frame_shelves_03"
+  },
+  "fabric_rack": {
+    "name": "Worn Metal Rack",
+    "author": "Luca B",
+    "href": "https://polyhaven.com/a/worn_metal_rack"
+  },
+  "display_counter": {
+    "name": "Wooden Display Shelves 01",
+    "author": "James Ray Cock",
+    "href": "https://polyhaven.com/a/wooden_display_shelves_01"
+  },
+  "office_desk": {
+    "name": "Metal Office Desk",
+    "author": "Ulan Cabanilla",
+    "href": "https://polyhaven.com/a/metal_office_desk"
+  },
+  "teacher_desk": {
+    "name": "Wooden Table 02",
+    "author": "Fran Calvente",
+    "href": "https://polyhaven.com/a/WoodenTable_02"
+  },
+  "office_chair": {
+    "name": "Modern Arm Chair 01",
+    "author": "Vibrant Nordic",
+    "href": "https://polyhaven.com/a/modern_arm_chair_01"
+  },
+  "dining_chair": {
+    "name": "Dining Chair 02",
+    "author": "James Ray Cock",
+    "href": "https://polyhaven.com/a/dining_chair_02"
+  },
+  "student_desk": {
+    "name": "School Desk 01",
+    "author": "Ethan Place",
+    "href": "https://polyhaven.com/a/SchoolDesk_01"
+  },
+  "dining_table": {
+    "name": "Dining Table",
+    "author": "Aron Łyczek",
+    "href": "https://polyhaven.com/a/dining_table"
+  },
+  "cutting_table": {
+    "name": "Wooden Table 01",
+    "author": "Ethan Place",
+    "href": "https://polyhaven.com/a/WoodenTable_01"
+  },
+  "cutting_table_compact": {
+    "name": "Small Wooden Table 01",
+    "author": "Ulan Cabanilla",
+    "href": "https://polyhaven.com/a/small_wooden_table_01"
+  },
+  "worktable_steel": {
+    "name": "Industrial Storage Cart",
+    "author": "Jule Bielitz",
+    "href": "https://polyhaven.com/a/industrial_storage_cart"
+  },
+  "packing_table": {
+    "name": "Painted Wooden Table",
+    "author": "Kirill Sannikov",
+    "href": "https://polyhaven.com/a/painted_wooden_table"
+  },
+  "ironing_station": {
+    "name": "Small Wooden Table 01",
+    "author": "Ulan Cabanilla",
+    "href": "https://polyhaven.com/a/small_wooden_table_01"
+  },
+  "sofa": {
+    "name": "Sofa 01",
+    "author": "Kirill Sannikov",
+    "href": "https://polyhaven.com/a/Sofa_01"
+  },
+  "bed_double": {
+    "name": "Gothic Bed 01",
+    "author": "Kirill Sannikov",
+    "href": "https://polyhaven.com/a/GothicBed_01"
+  },
+  "wardrobe": {
+    "name": "Painted Wooden Cabinet",
+    "author": "Kirill Sannikov",
+    "href": "https://polyhaven.com/a/painted_wooden_cabinet"
+  },
+  "file_cabinet": {
+    "name": "Drawer Cabinet",
+    "author": "Ulan Cabanilla",
+    "href": "https://polyhaven.com/a/drawer_cabinet"
+  },
+  "reception_desk": {
+    "name": "Classic Console 01",
+    "author": "Kirill Sannikov",
+    "href": "https://polyhaven.com/a/ClassicConsole_01"
+  },
+  "pos_counter": {
+    "name": "Coffee Cart 01",
+    "author": "Joe Seabuhr",
+    "href": "https://polyhaven.com/a/CoffeeCart_01"
+  },
+  "kitchen_counter": {
+    "name": "Painted Wooden Cabinet 02",
+    "author": "Kirill Sannikov",
+    "href": "https://polyhaven.com/a/painted_wooden_cabinet_02"
+  },
+  "proofer": {
+    "name": "Chinese Cabinet",
+    "author": "Kirill Sannikov",
+    "href": "https://polyhaven.com/a/chinese_cabinet"
+  },
+  "oven_compact": {
+    "name": "Electric Stove",
+    "author": "Kuutti Siitonen",
+    "href": "https://polyhaven.com/a/electric_stove"
+  },
+  "oven_deck": {
+    "name": "Electric Stove",
+    "author": "Kuutti Siitonen",
+    "href": "https://polyhaven.com/a/electric_stove"
+  },
+  "coffee_table_art_deco": {
+    "name": "Art deco coffee table",
+    "author": "artius.vens",
+    "href": "https://sketchfab.com/3d-models/art-deco-offee-table-8211bcb3924d44c39b2cb5ef5452b884",
+    "license": "CC-BY-4.0",
+    "credit": "Art deco coffee table by artius.vens. CC-BY-4.0, Sketchfab. Fit to the catalog size. Not a manufacturer model."
+  }
+}

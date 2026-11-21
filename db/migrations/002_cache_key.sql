@@ -1,0 +1,1 @@
+ALTER TABLE price_cache MODIFY key_hash VARCHAR(96) NOT NULL;
