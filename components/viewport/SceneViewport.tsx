@@ -27,6 +27,7 @@ function present(objects: PlacedObject[], spec: BuildingSpec, nudges: Record<str
     return {
       ...object,
       x: nudge.x,
+      y: nudge.y ?? object.y,
       z: nudge.z,
       rotationY: nudge.rotationY,
       w: nudge.w ?? object.w,
@@ -117,7 +118,6 @@ function Room({ rigMode }: { rigMode: CameraMode }) {
       <PerspectiveCamera makeDefault={rigMode !== "plan"} fov={42} near={0.05} far={400} position={[spec.room.width * -0.2, spec.room.height * 1.8, spec.room.length * 1.2]} />
       <OrthographicCamera makeDefault={rigMode === "plan"} near={0.1} far={300} position={[spec.room.width / 2, 80, spec.room.length / 2]} zoom={18} />
       <CameraRig mode={rigMode} width={spec.room.width} length={spec.room.length} height={spec.room.height} />
-      <ToolCamera />
       <HandleTracker objects={objects} />
       {rigMode === "orbit" || rigMode === "cutaway" ? (
         <OrbitControls enabled={!dragging} makeDefault enableDamping target={[spec.room.width / 2, spec.room.height * 0.3, spec.room.length / 2]} maxPolarAngle={Math.PI / 2.05} />
@@ -179,7 +179,6 @@ function Room({ rigMode }: { rigMode: CameraMode }) {
           <meshStandardMaterial color={spec.style.roof === "slab" ? "#c8c2b8" : "#8e98a0"} roughness={0.7} metalness={spec.style.roof === "sheet" ? 0.35 : 0} />
         </mesh>
       ) : null}
-      <DragSurface objects={objects} width={spec.room.width} length={spec.room.length} enabled={rigMode !== "walk" && !view.project.readOnly} />
       <CatalogGroups objects={objects} />
       <Labels objects={objects} />
     </>
@@ -758,11 +757,15 @@ function Selection({ objects }: { objects: PlacedObject[] }) {
 const drag = {
   id: "",
   x: 0,
+  y: 0,
   z: 0,
   rotationY: 0,
   w: 0,
   l: 0,
   h: 0,
+  baseX: 0,
+  baseY: 0,
+  baseZ: 0,
   baseW: 0,
   baseL: 0,
   baseH: 0,
@@ -773,24 +776,7 @@ const drag = {
   lastX: 0,
   originX: 0,
 };
-const floorRay = new THREE.Raycaster();
-const floorNdc = new THREE.Vector2();
-let toolCamera: THREE.Camera | null = null;
-let toolCanvas: HTMLCanvasElement | null = null;
 let hoverTimer = 0;
-
-function ToolCamera() {
-  const camera = useThree((state) => state.camera);
-  const gl = useThree((state) => state.gl);
-  useEffect(() => {
-    toolCamera = camera;
-    toolCanvas = gl.domElement;
-    return () => {
-      if (toolCamera === camera) toolCamera = null;
-    };
-  }, [camera, gl]);
-  return null;
-}
 
 function holdHover(id: string) {
   window.clearTimeout(hoverTimer);
@@ -804,30 +790,12 @@ function releaseHover() {
   }, 350);
 }
 
-function pointOnFloor(origin: THREE.Vector3, direction: THREE.Vector3) {
-  if (Math.abs(direction.y) < 1e-5) return null;
-  const t = -origin.y / direction.y;
-  if (t < 0) return null;
-  return { x: origin.x + direction.x * t, z: origin.z + direction.z * t };
+function snapAxis(value: number, min: number, max: number) {
+  return r3(clamp(Math.round(value / 0.05) * 0.05, min, Math.max(min, max)));
 }
 
-function updateDrag(x: number, z: number) {
-  const room = useDink.getState().view?.spec?.room;
-  if (!room || !drag.id) return;
-  drag.x = r3(clamp(Math.round(x / 0.05) * 0.05, 0.15, room.width - 0.15));
-  drag.z = r3(clamp(Math.round(z / 0.05) * 0.05, 0.15, room.length - 0.15));
-  drag.moved = true;
-  useDink.getState().nudge(drag.id, { x: drag.x, z: drag.z, rotationY: drag.rotationY, w: drag.w, l: drag.l, h: drag.h, tint: drag.color });
-}
-
-function floorFromClient(clientX: number, clientY: number) {
-  if (!toolCamera || !toolCanvas) return null;
-  const rect = toolCanvas.getBoundingClientRect();
-  if (rect.width < 1 || rect.height < 1) return null;
-  floorNdc.x = ((clientX - rect.left) / rect.width) * 2 - 1;
-  floorNdc.y = -((clientY - rect.top) / rect.height) * 2 + 1;
-  floorRay.setFromCamera(floorNdc, toolCamera);
-  return pointOnFloor(floorRay.ray.origin, floorRay.ray.direction);
+function previewDrag() {
+  useDink.getState().nudge(drag.id, { x: drag.x, y: drag.y, z: drag.z, rotationY: drag.rotationY, w: drag.w, l: drag.l, h: drag.h, tint: drag.color });
 }
 
 function finishDrag() {
@@ -842,6 +810,7 @@ function finishDrag() {
     x: drag.x,
     z: drag.z,
     rotationY: drag.rotationY,
+    ...(drag.mode === "move" ? { y: drag.y } : {}),
     ...(drag.mode === "resize" ? { w: drag.w, l: drag.l, h: drag.h } : {}),
     ...(drag.color ? { color: drag.color } : {}),
   };
@@ -872,7 +841,11 @@ function beginTool(object: PlacedObject, mode: "move" | "rotate" | "resize", eve
   state.setDragging(true);
   drag.id = object.id;
   drag.x = object.x;
+  drag.y = object.y;
   drag.z = object.z;
+  drag.baseX = object.x;
+  drag.baseY = object.y;
+  drag.baseZ = object.z;
   drag.rotationY = object.rotationY;
   drag.w = object.w;
   drag.l = object.l;
@@ -895,7 +868,7 @@ function beginTool(object: PlacedObject, mode: "move" | "rotate" | "resize", eve
       if (dx === 0) return;
       drag.rotationY = r3(drag.rotationY + dx * 0.012);
       drag.moved = true;
-      useDink.getState().nudge(drag.id, { x: drag.x, z: drag.z, rotationY: drag.rotationY, w: drag.w, l: drag.l, h: drag.h, tint: drag.color });
+      previewDrag();
       return;
     }
     if (drag.mode === "resize") {
@@ -904,11 +877,17 @@ function beginTool(object: PlacedObject, mode: "move" | "rotate" | "resize", eve
       if (drag.axis === "z") drag.l = r3(clamp(drag.baseL * factor, 0.05, 40));
       if (drag.axis === "y") drag.h = r3(clamp(drag.baseH * factor, 0.15, 12));
       drag.moved = true;
-      useDink.getState().nudge(drag.id, { x: drag.x, z: drag.z, rotationY: drag.rotationY, w: drag.w, l: drag.l, h: drag.h, tint: drag.color });
+      previewDrag();
       return;
     }
-    const hit = floorFromClient(ev.clientX, ev.clientY);
-    if (hit) updateDrag(hit.x, hit.z);
+    const room = useDink.getState().view?.spec?.room;
+    if (!room) return;
+    const delta = (ev.clientX - drag.originX) * 0.01;
+    if (drag.axis === "x") drag.x = snapAxis(drag.baseX + delta, 0.15, room.width - 0.15);
+    if (drag.axis === "z") drag.z = snapAxis(drag.baseZ + delta, 0.15, room.length - 0.15);
+    if (drag.axis === "y") drag.y = snapAxis(drag.baseY + delta, 0, Math.min(12, room.height - drag.h));
+    drag.moved = true;
+    previewDrag();
   };
   const onUp = () => {
     window.removeEventListener("pointermove", onMove);
@@ -917,22 +896,6 @@ function beginTool(object: PlacedObject, mode: "move" | "rotate" | "resize", eve
   };
   window.addEventListener("pointermove", onMove);
   window.addEventListener("pointerup", onUp);
-}
-
-function DragSurface({ width, length, enabled }: { objects: PlacedObject[]; width: number; length: number; enabled: boolean }) {
-  return (
-    <mesh
-      rotation={[-Math.PI / 2, 0, 0]}
-      position={[width / 2, 0.02, length / 2]}
-      onPointerMove={(event) => {
-        if (!enabled || !drag.id) return;
-        updateDrag(event.point.x, event.point.z);
-      }}
-    >
-      <planeGeometry args={[width, length]} />
-      <meshBasicMaterial transparent opacity={0} depthWrite={false} />
-    </mesh>
-  );
 }
 
 function Labels({ objects }: { objects: PlacedObject[] }) {
@@ -987,7 +950,7 @@ function HandleLayer({ objects }: { objects: PlacedObject[] }) {
   const handles = useDink((state) => state.handles);
   const dragging = useDink((state) => state.dragging);
   const readOnly = useDink((state) => state.view?.project.readOnly);
-  const [resizeId, setResizeId] = useState<string | null>(null);
+  const [axes, setAxes] = useState<{ id: string; tool: "move" | "resize" } | null>(null);
   if (!handles || dragging || readOnly) return null;
   return (
     <div className="pointer-events-none absolute inset-0 z-10">
@@ -1001,15 +964,33 @@ function HandleLayer({ objects }: { objects: PlacedObject[] }) {
           className="pointer-events-auto absolute left-0 top-0 flex gap-1 rounded-full border border-[#322d27] bg-[#1c1a17]/95 p-1 shadow-xl"
           style={{ display: "none" }}
         >
-          <button
-            type="button"
-            aria-label="Move"
-            className="flex items-center gap-1 rounded-full bg-[#e08a4f] px-2 py-1 text-[11px] font-medium text-[#1c1a17]"
-            onPointerDown={(event) => beginTool(object, "move", event)}
-          >
-            <MoveIcon />
-            Move
-          </button>
+          {axes?.id === object.id && axes.tool === "move" ? (
+            (["x", "y", "z"] as const).map((axis) => (
+              <button
+                key={axis}
+                type="button"
+                aria-label={`Move ${axis.toUpperCase()}`}
+                title={axis === "x" ? "Along X" : axis === "y" ? "Up and down" : "Along Z"}
+                className="rounded-full bg-[#e08a4f] px-2 py-1 text-[11px] font-medium uppercase text-[#1c1a17]"
+                onPointerDown={(event) => beginTool(object, "move", event, axis)}
+              >
+                {axis}
+              </button>
+            ))
+          ) : (
+            <button
+              type="button"
+              aria-label="Move"
+              className="flex items-center gap-1 rounded-full bg-[#e08a4f] px-2 py-1 text-[11px] font-medium text-[#1c1a17]"
+              onClick={(event) => {
+                event.stopPropagation();
+                setAxes({ id: object.id, tool: "move" });
+              }}
+            >
+              <MoveIcon />
+              Move
+            </button>
+          )}
           <button
             type="button"
             aria-label="Rotate"
@@ -1019,7 +1000,7 @@ function HandleLayer({ objects }: { objects: PlacedObject[] }) {
             <RotateIcon />
             Rotate
           </button>
-          {resizeId === object.id ? (
+          {axes?.id === object.id && axes.tool === "resize" ? (
             (["x", "y", "z"] as const).map((axis) => (
               <button
                 key={axis}
@@ -1039,7 +1020,7 @@ function HandleLayer({ objects }: { objects: PlacedObject[] }) {
               className="flex items-center gap-1 rounded-full px-2 py-1 text-[11px] text-[#f4efe6] hover:bg-[#322d27]"
               onClick={(event) => {
                 event.stopPropagation();
-                setResizeId(object.id);
+                setAxes({ id: object.id, tool: "resize" });
               }}
             >
               <ResizeIcon />
@@ -1099,7 +1080,7 @@ function WalkHint() {
   const handles = useDink((state) => state.handles);
   return (
     <p className="pointer-events-none absolute bottom-3 left-3 max-w-xs rounded-full bg-black/50 px-3 py-1 text-xs text-white">
-      {handles ? "Resize opens X, Y, and Z. Drag right to grow that axis. Delete removes that piece." : "Click to look · WASD to walk · eye height 1.7 m"}
+      {handles ? "Move and resize open X, Y, and Z. Drag right to move or grow that axis. Delete removes that piece." : "Click to look · WASD to walk · eye height 1.7 m"}
     </p>
   );
 }

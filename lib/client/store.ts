@@ -7,7 +7,7 @@ import type { PriceQuote } from "@/lib/cost/compute";
 import type { BuildingSpec, UserSettings } from "@/lib/schemas";
 import type { AssetProgress, CameraMode, CameraPose, ModelLink, PanelTab, ProjectView } from "@/lib/client/types";
 
-export type Nudge = { x: number; z: number; rotationY: number; w?: number; l?: number; h?: number; tint?: string };
+export type Nudge = { x: number; z: number; rotationY: number; y?: number; w?: number; l?: number; h?: number; tint?: string };
 
 interface DinkState {
   view: ProjectView | null;

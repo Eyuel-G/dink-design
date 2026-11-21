@@ -17,6 +17,7 @@ const Body = z.object({
   w: z.number().positive().max(40).optional(),
   l: z.number().positive().max(40).optional(),
   h: z.number().positive().max(12).optional(),
+  y: z.number().min(0).max(12).optional(),
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
 });
 
@@ -40,13 +41,15 @@ export async function POST(request: Request, context: { params: Promise<{ projec
     z: body.data.z,
     rotationY: body.data.rotationY,
     ...(body.data.w ?? prior?.w ? { w: body.data.w ?? prior?.w, l: body.data.l ?? prior?.l, h: body.data.h ?? prior?.h } : {}),
+    ...((body.data.y ?? prior?.y) != null ? { y: body.data.y ?? prior?.y } : {}),
     ...(body.data.color ?? prior?.color ? { color: body.data.color ?? prior?.color } : {}),
   };
   const placements = [...(current.spec.placements ?? []).filter((entry) => entry.objectId !== body.data.objectId), placement];
   const spec = BuildingSpecSchema.parse({ ...current.spec, placements });
   const layout = layoutSpec(spec);
   const placed = layout.objects.find((object) => object.id === body.data.objectId);
-  if (!placed || placed.x !== r3(body.data.x) || placed.z !== r3(body.data.z)) {
+  const yMoved = body.data.y != null && placed?.y !== r3(body.data.y);
+  if (!placed || placed.x !== r3(body.data.x) || placed.z !== r3(body.data.z) || yMoved) {
     return json({ error: layout.warnings.at(-1) || "That spot is outside the room or overlaps another piece.", layout }, 409);
   }
   const label = body.data.color && body.data.color !== prior?.color ? `Recolored ${body.data.objectId}` : body.data.w ? `Resized ${body.data.objectId}` : `Moved ${body.data.objectId}`;
